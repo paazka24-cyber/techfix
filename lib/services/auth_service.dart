@@ -20,7 +20,5 @@ class AuthService {
     return _auth.signInWithEmailAndPassword(email: email, password: password);
   }
 
-  Future<void> logout() {
-    return _auth.signOut();
-  }
+  Future<void> logout() => _auth.signOut();
 }

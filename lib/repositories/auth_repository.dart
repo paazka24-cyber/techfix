@@ -32,13 +32,16 @@ class AuthRepository {
     await _db.collection('users').doc(uid).set(user.toMap());
   }
 
+  Future<void> login(String email, String password) async {
+    await _authService.login(email, password);
+  }
+
+  Future<void> logout() => _authService.logout();
+
   // Read the profile of a user (needed for role-based navigation)
   Future<AppUser?> getUser(String uid) async {
     final doc = await _db.collection('users').doc(uid).get();
     if (!doc.exists) return null;
     return AppUser.fromMap(doc.data()!, doc.id);
   }
-
-  // TODO: you write login(email, password) -> calls _authService.login
-  // TODO: you write logout() -> calls _authService.logout
 }
