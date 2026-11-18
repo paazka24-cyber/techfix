@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import '../../providers/auth_providers.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -29,24 +29,30 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return; // stop if invalid
+    if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
     try {
-      await ref
-          .read(authRepositoryProvider)
-          .register(
+      await ref.read(authRepositoryProvider).register(
             fullName: _nameController.text.trim(),
             email: _emailController.text.trim(),
             password: _passwordController.text,
             phoneNumber: _phoneController.text.trim(),
           );
-      // Refresh the profile provider so navigation sees the new user
       ref.invalidate(appUserProvider);
+      if (!mounted) return;
+      // Remove Register so AuthGate (underneath) becomes visible
+      Navigator.of(context).popUntil((route) => route.isFirst);
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(_friendlyError(e.code))));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_friendlyError(e.code))),
+      );
+    } on FirebaseException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not save profile: ${e.code}')),
+      );
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -83,6 +89,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               ),
               TextFormField(
                 controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
                 decoration: const InputDecoration(labelText: 'Email'),
                 validator: (v) => (v == null || !v.contains('@'))
                     ? 'Enter a valid email'
@@ -90,6 +97,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               ),
               TextFormField(
                 controller: _phoneController,
+                keyboardType: TextInputType.phone,
                 decoration: const InputDecoration(labelText: 'Phone number'),
                 validator: (v) => (v == null || v.trim().isEmpty)
                     ? 'Enter your phone number'
@@ -97,8 +105,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               ),
               TextFormField(
                 controller: _passwordController,
-                decoration: const InputDecoration(labelText: 'Password'),
                 obscureText: true,
+                decoration: const InputDecoration(labelText: 'Password'),
                 validator: (v) => (v == null || v.length < 6)
                     ? 'Password must be at least 6 characters'
                     : null,

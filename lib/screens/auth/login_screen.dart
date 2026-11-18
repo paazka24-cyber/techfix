@@ -1,8 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import '../../providers/auth_providers.dart';
+import 'forgot_password_screen.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -30,17 +30,34 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     setState(() => _isLoading = true);
     try {
-      await ref
-          .read(authRepositoryProvider)
-          .login(_emailController.text.trim(), _passwordController.text);
-      ref.invalidate(appUserProvider);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Logged in')));
+      await ref.read(authRepositoryProvider).login(
+            _emailController.text.trim(),
+            _passwordController.text,
+          );
+      // No navigation needed: AuthGate switches screens by itself
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(_friendlyError(e.code))));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_friendlyError(e.code))),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _google() async {
+    setState(() => _isLoading = true);
+    try {
+      await ref.read(authRepositoryProvider).signInWithGoogle();
+      ref.invalidate(appUserProvider);
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      if (e.code != 'popup-closed-by-user' &&
+          e.code != 'cancelled-popup-request') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Google sign-in failed. Try again.')),
+        );
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -107,6 +124,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   MaterialPageRoute(builder: (_) => const RegisterScreen()),
                 ),
                 child: const Text("Don't have an account? Register"),
+              ),
+              TextButton(
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const ForgotPasswordScreen()),
+                ),
+                child: const Text('Forgot password?'),
+              ),
+              const Divider(height: 32),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: _isLoading ? null : _google,
+                  icon: const Icon(Icons.g_mobiledata, size: 28),
+                  label: const Text('Continue with Google'),
+                ),
               ),
             ],
           ),
