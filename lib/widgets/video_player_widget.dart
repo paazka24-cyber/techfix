@@ -10,26 +10,60 @@ class VideoPlayerWidget extends StatefulWidget {
 }
 
 class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
-  late final VideoPlayerController _controller;
+  late VideoPlayerController _controller;
   bool _ready = false;
   bool _failed = false;
 
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.url));
-    _controller.initialize().then((_) {
-      if (mounted) setState(() => _ready = true);
-    }).catchError((_) {
-      if (mounted) setState(() => _failed = true);
-    });
-    _controller.addListener(() {
-      if (mounted) setState(() {});
-    });
+    _controller = _createController(widget.url);
+  }
+
+  VideoPlayerController _createController(String url) {
+    final controller = VideoPlayerController.networkUrl(Uri.parse(url));
+    controller.addListener(_handleControllerUpdate);
+    _initialize(controller);
+    return controller;
+  }
+
+  Future<void> _initialize(VideoPlayerController controller) async {
+    try {
+      await controller.initialize();
+      if (mounted && controller == _controller) {
+        setState(() {
+          _ready = true;
+          _failed = false;
+        });
+      }
+    } catch (_) {
+      if (mounted && controller == _controller) {
+        setState(() => _failed = true);
+      }
+    }
+  }
+
+  void _handleControllerUpdate() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void didUpdateWidget(covariant VideoPlayerWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.url != widget.url) {
+      _controller.removeListener(_handleControllerUpdate);
+      _controller.dispose();
+      setState(() {
+        _ready = false;
+        _failed = false;
+        _controller = _createController(widget.url);
+      });
+    }
   }
 
   @override
   void dispose() {
+    _controller.removeListener(_handleControllerUpdate);
     _controller.dispose();
     super.dispose();
   }
