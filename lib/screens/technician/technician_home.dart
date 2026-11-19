@@ -6,6 +6,7 @@ import '../../widgets/image_gallery.dart';
 import '../../widgets/status_chip.dart';
 import 'technician_profile_tab.dart';
 import 'technician_request_screen.dart';
+import 'technician_reviews_tab.dart';
 
 class TechnicianHome extends ConsumerWidget {
   const TechnicianHome({super.key});
@@ -13,7 +14,7 @@ class TechnicianHome extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return DefaultTabController(
-      length: 3,
+      length: 4,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Technician'),
@@ -28,6 +29,7 @@ class TechnicianHome extends ConsumerWidget {
             tabs: [
               Tab(text: 'Available'),
               Tab(text: 'My Jobs'),
+              Tab(text: 'Reviews'),
               Tab(text: 'Profile'),
             ],
           ),
@@ -36,6 +38,7 @@ class TechnicianHome extends ConsumerWidget {
           children: [
             _AvailableTab(),
             _JobsTab(),
+            TechnicianReviewsTab(),
             TechnicianProfileTab(),
           ],
         ),
