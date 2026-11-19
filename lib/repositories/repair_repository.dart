@@ -7,21 +7,33 @@ class RepairRepository {
   // CREATE
   Future<void> create(RepairRequest request) => _col.add(request.toMap());
 
-  // READ (live list for one customer). Sorted in Dart to avoid needing
-  // a composite Firestore index.
+  // READ: customer's own requests
   Stream<List<RepairRequest>> watchCustomerRequests(String customerId) {
     return _col.where('customerId', isEqualTo: customerId).snapshots().map(
-      (snap) {
-        final list = snap.docs
-            .map((d) => RepairRequest.fromMap(d.data(), d.id))
-            .toList();
-        list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-        return list;
-      },
-    );
+          (snap) => _sorted(snap),
+        );
   }
 
-  // READ (live single request)
+  // READ: open pool for technicians (not taken, not rejected by me)
+  Stream<List<RepairRequest>> watchAvailableRequests(String technicianId) {
+    return _col
+        .where('status', isEqualTo: RepairStatus.submitted)
+        .snapshots()
+        .map((snap) => _sorted(snap)
+            .where((r) =>
+                r.technicianId == null && !r.rejectedBy.contains(technicianId))
+            .toList());
+  }
+
+  // READ: jobs assigned to this technician
+  Stream<List<RepairRequest>> watchTechnicianJobs(String technicianId) {
+    return _col
+        .where('technicianId', isEqualTo: technicianId)
+        .snapshots()
+        .map((snap) => _sorted(snap));
+  }
+
+  // READ: one request, live
   Stream<RepairRequest?> watchRequest(String id) {
     return _col.doc(id).snapshots().map(
           (doc) =>
@@ -29,11 +41,43 @@ class RepairRepository {
         );
   }
 
-  // UPDATE (customer cancels)
+  // UPDATE: customer cancels
   Future<void> cancel(String id) {
     return _col.doc(id).update({
       'status': RepairStatus.cancelled,
       'updatedAt': Timestamp.now(),
     });
+  }
+
+  // UPDATE: technician accepts an open request
+  Future<void> accept(String id, String technicianId) {
+    return _col.doc(id).update({
+      'technicianId': technicianId,
+      'status': RepairStatus.assigned,
+      'updatedAt': Timestamp.now(),
+    });
+  }
+
+  // UPDATE: technician rejects (hides it from their own pool only)
+  Future<void> reject(String id, String technicianId) {
+    return _col.doc(id).update({
+      'rejectedBy': FieldValue.arrayUnion([technicianId]),
+      'updatedAt': Timestamp.now(),
+    });
+  }
+
+  // UPDATE: technician changes the repair status
+  Future<void> updateStatus(String id, String status) {
+    return _col.doc(id).update({
+      'status': status,
+      'updatedAt': Timestamp.now(),
+    });
+  }
+
+  List<RepairRequest> _sorted(QuerySnapshot<Map<String, dynamic>> snap) {
+    final list =
+        snap.docs.map((d) => RepairRequest.fromMap(d.data(), d.id)).toList();
+    list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return list;
   }
 }

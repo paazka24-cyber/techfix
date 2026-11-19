@@ -10,10 +10,18 @@ class RepairStatus {
   static const delivered = 'delivered';
   static const cancelled = 'cancelled';
 
-  // Order used for the progress tracker (cancelled is not part of the flow)
   static const flow = [
     submitted,
     assigned,
+    inReview,
+    inProgress,
+    waitingForParts,
+    completed,
+    delivered,
+  ];
+
+  // Statuses a technician may set on their own job
+  static const technicianOptions = [
     inReview,
     inProgress,
     waitingForParts,
@@ -55,6 +63,7 @@ class RepairRequest {
   final String deviceModel;
   final String problemDescription;
   final List<String> imageUrls;
+  final List<String> rejectedBy;
   final String status;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -69,6 +78,7 @@ class RepairRequest {
     required this.deviceModel,
     required this.problemDescription,
     this.imageUrls = const [],
+    this.rejectedBy = const [],
     this.status = RepairStatus.submitted,
     required this.createdAt,
     required this.updatedAt,
@@ -85,6 +95,7 @@ class RepairRequest {
       deviceModel: map['deviceModel'] ?? '',
       problemDescription: map['problemDescription'] ?? '',
       imageUrls: List<String>.from(map['imageUrls'] ?? []),
+      rejectedBy: List<String>.from(map['rejectedBy'] ?? []),
       status: map['status'] ?? RepairStatus.submitted,
       createdAt: (map['createdAt'] as Timestamp).toDate(),
       updatedAt: (map['updatedAt'] as Timestamp).toDate(),
@@ -101,6 +112,7 @@ class RepairRequest {
       'deviceModel': deviceModel,
       'problemDescription': problemDescription,
       'imageUrls': imageUrls,
+      'rejectedBy': rejectedBy,
       'status': status,
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),

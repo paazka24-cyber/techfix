@@ -1,0 +1,81 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../models/repair_request.dart';
+import '../../providers/repair_providers.dart';
+import '../../widgets/status_chip.dart';
+
+class TechnicianRequestScreen extends ConsumerWidget {
+  final String requestId;
+  const TechnicianRequestScreen({super.key, required this.requestId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final request = ref.watch(requestProvider(requestId));
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Job Details')),
+      body: request.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(child: Text('Error: $e')),
+        data: (r) {
+          if (r == null) return const Center(child: Text('Request not found'));
+
+          final locked = r.status == RepairStatus.cancelled ||
+              r.status == RepairStatus.delivered;
+
+          return ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      '${r.categoryName} - ${r.deviceModel}',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                  ),
+                  StatusChip(r.status),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text('Customer: ${r.customerName}'),
+              const SizedBox(height: 16),
+              Text('Problem', style: Theme.of(context).textTheme.labelLarge),
+              const SizedBox(height: 4),
+              Text(r.problemDescription),
+              const SizedBox(height: 24),
+              if (locked)
+                Text(
+                  r.status == RepairStatus.cancelled
+                      ? 'The customer cancelled this request.'
+                      : 'This repair has been delivered.',
+                )
+              else
+                DropdownButtonFormField<String>(
+                  key: ValueKey(r.status),
+                  initialValue:
+                      RepairStatus.technicianOptions.contains(r.status)
+                          ? r.status
+                          : null,
+                  decoration: const InputDecoration(
+                    labelText: 'Update repair status',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: RepairStatus.technicianOptions
+                      .map((s) => DropdownMenuItem(
+                            value: s,
+                            child: Text(RepairStatus.label(s)),
+                          ))
+                      .toList(),
+                  onChanged: (s) {
+                    if (s == null) return;
+                    ref.read(repairRepositoryProvider).updateStatus(r.id, s);
+                  },
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}

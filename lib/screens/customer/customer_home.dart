@@ -5,6 +5,7 @@ import '../../providers/repair_providers.dart';
 import '../../widgets/status_chip.dart';
 import 'create_request_screen.dart';
 import 'request_detail_screen.dart';
+import 'technicians_screen.dart';
 
 class CustomerHome extends ConsumerWidget {
   const CustomerHome({super.key});
@@ -18,6 +19,15 @@ class CustomerHome extends ConsumerWidget {
         title: const Text('My Repairs'),
         actions: [
           IconButton(
+            tooltip: 'Technicians',
+            icon: const Icon(Icons.engineering),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const TechniciansScreen()),
+            ),
+          ),
+          IconButton(
+            tooltip: 'Logout',
             icon: const Icon(Icons.logout),
             onPressed: () => ref.read(authRepositoryProvider).logout(),
           ),
