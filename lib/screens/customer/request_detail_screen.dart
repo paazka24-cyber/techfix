@@ -8,6 +8,7 @@ import '../../widgets/review_tile.dart';
 import '../../widgets/status_chip.dart';
 import '../../widgets/video_player_widget.dart';
 import 'rate_technician_dialog.dart';
+import '../chat/chat_screen.dart';
 
 class RequestDetailScreen extends ConsumerWidget {
   final String requestId;
@@ -68,6 +69,23 @@ class RequestDetailScreen extends ConsumerWidget {
                   StatusChip(r.status),
                 ],
               ),
+              if (r.technicianId != null &&
+                  r.status != RepairStatus.cancelled) ...[
+                const SizedBox(height: 12),
+                FilledButton.icon(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ChatScreen(
+                        requestId: r.id,
+                        title: 'Chat with technician',
+                      ),
+                    ),
+                  ),
+                  icon: const Icon(Icons.chat),
+                  label: const Text('Chat with technician'),
+                ),
+              ],
               const SizedBox(height: 16),
               Text('Problem', style: Theme.of(context).textTheme.labelLarge),
               const SizedBox(height: 4),

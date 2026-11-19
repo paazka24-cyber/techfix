@@ -5,6 +5,7 @@ import '../../providers/repair_providers.dart';
 import '../../widgets/image_gallery.dart';
 import '../../widgets/status_chip.dart';
 import '../../widgets/video_player_widget.dart';
+import '../chat/chat_screen.dart';
 
 class TechnicianRequestScreen extends ConsumerWidget {
   final String requestId;
@@ -41,6 +42,22 @@ class TechnicianRequestScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 8),
               Text('Customer: ${r.customerName}'),
+              if (r.status != RepairStatus.cancelled) ...[
+                const SizedBox(height: 12),
+                FilledButton.icon(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ChatScreen(
+                        requestId: r.id,
+                        title: 'Chat with ${r.customerName}',
+                      ),
+                    ),
+                  ),
+                  icon: const Icon(Icons.chat),
+                  label: const Text('Chat with customer'),
+                ),
+              ],
               const SizedBox(height: 16),
               Text('Problem', style: Theme.of(context).textTheme.labelLarge),
               const SizedBox(height: 4),
