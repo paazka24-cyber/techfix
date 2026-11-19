@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../models/repair_request.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/repair_providers.dart';
+import '../../widgets/image_gallery.dart';
 import '../../widgets/status_chip.dart';
 import 'technician_profile_tab.dart';
 import 'technician_request_screen.dart';
@@ -76,6 +76,18 @@ class _AvailableTab extends ConsumerWidget {
                     Text('From ${r.customerName}'),
                     const SizedBox(height: 8),
                     Text(r.problemDescription),
+                    const SizedBox(height: 8),
+                    ImageGallery(urls: r.imageUrls),
+                    if (r.videoUrl != null) ...[
+                      const SizedBox(height: 8),
+                      const Row(
+                        children: [
+                          Icon(Icons.videocam, size: 18),
+                          SizedBox(width: 6),
+                          Text('Includes a video (open after accepting)'),
+                        ],
+                      ),
+                    ],
                     const SizedBox(height: 12),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,

@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/repair_request.dart';
 import '../../providers/repair_providers.dart';
+import '../../widgets/image_gallery.dart';
 import '../../widgets/status_chip.dart';
+import '../../widgets/video_player_widget.dart';
 
 class TechnicianRequestScreen extends ConsumerWidget {
   final String requestId;
@@ -43,6 +45,16 @@ class TechnicianRequestScreen extends ConsumerWidget {
               Text('Problem', style: Theme.of(context).textTheme.labelLarge),
               const SizedBox(height: 4),
               Text(r.problemDescription),
+              const SizedBox(height: 16),
+              Text('Photos', style: Theme.of(context).textTheme.labelLarge),
+              const SizedBox(height: 8),
+              ImageGallery(urls: r.imageUrls),
+              if (r.videoUrl != null) ...[
+                const SizedBox(height: 16),
+                Text('Video', style: Theme.of(context).textTheme.labelLarge),
+                const SizedBox(height: 8),
+                VideoPlayerWidget(url: r.videoUrl!),
+              ],
               const SizedBox(height: 24),
               if (locked)
                 Text(

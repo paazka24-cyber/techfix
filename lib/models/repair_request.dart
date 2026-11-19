@@ -20,7 +20,6 @@ class RepairStatus {
     delivered,
   ];
 
-  // Statuses a technician may set on their own job
   static const technicianOptions = [
     inReview,
     inProgress,
@@ -63,6 +62,7 @@ class RepairRequest {
   final String deviceModel;
   final String problemDescription;
   final List<String> imageUrls;
+  final String? videoUrl;
   final List<String> rejectedBy;
   final String status;
   final DateTime createdAt;
@@ -78,6 +78,7 @@ class RepairRequest {
     required this.deviceModel,
     required this.problemDescription,
     this.imageUrls = const [],
+    this.videoUrl,
     this.rejectedBy = const [],
     this.status = RepairStatus.submitted,
     required this.createdAt,
@@ -95,6 +96,7 @@ class RepairRequest {
       deviceModel: map['deviceModel'] ?? '',
       problemDescription: map['problemDescription'] ?? '',
       imageUrls: List<String>.from(map['imageUrls'] ?? []),
+      videoUrl: map['videoUrl'],
       rejectedBy: List<String>.from(map['rejectedBy'] ?? []),
       status: map['status'] ?? RepairStatus.submitted,
       createdAt: (map['createdAt'] as Timestamp).toDate(),
@@ -112,6 +114,7 @@ class RepairRequest {
       'deviceModel': deviceModel,
       'problemDescription': problemDescription,
       'imageUrls': imageUrls,
+      'videoUrl': videoUrl,
       'rejectedBy': rejectedBy,
       'status': status,
       'createdAt': Timestamp.fromDate(createdAt),

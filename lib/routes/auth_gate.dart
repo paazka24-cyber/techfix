@@ -7,6 +7,10 @@ import '../screens/auth/verify_email_screen.dart';
 import '../screens/customer/customer_home.dart';
 import '../screens/technician/technician_home.dart';
 
+// DEVELOPMENT ONLY: set to false to skip email verification while testing
+// with fake emails. Set it back to true before you submit the project.
+const bool requireEmailVerification = false;
+
 class AuthGate extends ConsumerWidget {
   const AuthGate({super.key});
 
@@ -19,7 +23,9 @@ class AuthGate extends ConsumerWidget {
       error: (e, _) => _Message('Error: $e'),
       data: (firebaseUser) {
         if (firebaseUser == null) return const LoginScreen();
-        if (!firebaseUser.emailVerified) return const VerifyEmailScreen();
+        if (requireEmailVerification && !firebaseUser.emailVerified) {
+          return const VerifyEmailScreen();
+        }
 
         final appUser = ref.watch(appUserProvider);
         return appUser.when(
