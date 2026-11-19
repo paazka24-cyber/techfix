@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/repair_providers.dart';
+import '../../widgets/rating_badge.dart';
 import 'technician_profile_screen.dart';
 
 class TechniciansScreen extends ConsumerWidget {
@@ -37,15 +38,7 @@ class TechniciansScreen extends ConsumerWidget {
                         ? 'General repairs'
                         : t.specialization!,
                   ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.star, color: Colors.amber, size: 18),
-                      Text(t.reviewCount == 0
-                          ? ' New'
-                          : ' ${t.averageRating.toStringAsFixed(1)}'),
-                    ],
-                  ),
+                  trailing: RatingBadge(technicianId: t.uid),
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(

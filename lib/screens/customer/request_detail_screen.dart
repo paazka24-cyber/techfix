@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/repair_request.dart';
 import '../../providers/repair_providers.dart';
+import '../../providers/review_providers.dart';
 import '../../widgets/image_gallery.dart';
+import '../../widgets/review_tile.dart';
 import '../../widgets/status_chip.dart';
 import '../../widgets/video_player_widget.dart';
+import 'rate_technician_dialog.dart';
 
 class RequestDetailScreen extends ConsumerWidget {
   final String requestId;
@@ -47,6 +50,9 @@ class RequestDetailScreen extends ConsumerWidget {
 
           final canCancel = r.status == RepairStatus.submitted ||
               r.status == RepairStatus.assigned;
+          final canRate = r.technicianId != null &&
+              (r.status == RepairStatus.completed ||
+                  r.status == RepairStatus.delivered);
 
           return ListView(
             padding: const EdgeInsets.all(16),
@@ -97,6 +103,27 @@ class RequestDetailScreen extends ConsumerWidget {
                     title: Text(RepairStatus.label(s)),
                   );
                 }),
+              if (canRate) ...[
+                const SizedBox(height: 24),
+                Text('Your review',
+                    style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: 8),
+                ref.watch(requestReviewProvider(r.id)).when(
+                      loading: () => const LinearProgressIndicator(),
+                      error: (e, _) => Text('Error: $e'),
+                      data: (review) => review != null
+                          ? ReviewTile(review: review)
+                          : FilledButton.icon(
+                              onPressed: () => showDialog(
+                                context: context,
+                                builder: (_) =>
+                                    RateTechnicianDialog(request: r),
+                              ),
+                              icon: const Icon(Icons.star),
+                              label: const Text('Rate technician'),
+                            ),
+                    ),
+              ],
               const SizedBox(height: 24),
               if (canCancel)
                 OutlinedButton(

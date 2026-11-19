@@ -37,7 +37,7 @@ class StorageService {
 
     final request = http.MultipartRequest('POST', uri)
       ..fields['upload_preset'] = _uploadPreset
-      ..fields['folder'] = 'repair_${resourceType}s/$userId'
+      ..fields['asset_folder'] = 'repair_${resourceType}s/$userId'
       ..files.add(
         http.MultipartFile.fromBytes('file', bytes, filename: filename),
       );
@@ -45,7 +45,7 @@ class StorageService {
     final response = await request.send();
     final body = await response.stream.bytesToString();
     if (response.statusCode != 200) {
-      throw Exception('Upload failed (${response.statusCode})');
+      throw Exception('Cloudinary ${response.statusCode}: $body');
     }
     return jsonDecode(body)['secure_url'] as String;
   }

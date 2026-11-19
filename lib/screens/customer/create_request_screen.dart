@@ -127,10 +127,9 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
     } on FirebaseException catch (e) {
       _snack('Could not submit: ${e.code}');
     } catch (e) {
-      _snack('Could not upload files. Check your connection.');
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
+      debugPrint('UPLOAD ERROR: $e');
+      _snack('Upload error: $e');
+    } finally {}
   }
 
   @override
