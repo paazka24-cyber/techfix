@@ -10,7 +10,7 @@ import '../screens/technician/technician_home.dart';
 
 // DEVELOPMENT ONLY: set to false to skip email verification while testing
 // with fake emails. Set it back to true before you submit the project.
-const bool requireEmailVerification = true;
+const bool requireEmailVerification = false;
 
 class AuthGate extends ConsumerWidget {
   const AuthGate({super.key});
