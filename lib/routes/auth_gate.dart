@@ -7,10 +7,11 @@ import '../screens/auth/login_screen.dart';
 import '../screens/auth/verify_email_screen.dart';
 import '../screens/customer/customer_home.dart';
 import '../screens/technician/technician_home.dart';
+import '../widgets/splash_screen.dart';
 
 // DEVELOPMENT ONLY: set to false to skip email verification while testing
-// with fake emails. Set it back to true before you submit the project.
-const bool requireEmailVerification = false;
+// with fake emails. Keep it true for submission.
+const bool requireEmailVerification = true;
 
 class AuthGate extends ConsumerWidget {
   const AuthGate({super.key});
@@ -20,7 +21,7 @@ class AuthGate extends ConsumerWidget {
     final authState = ref.watch(authStateProvider);
 
     return authState.when(
-      loading: () => const _Loading(),
+      loading: () => const SplashScreen(),
       error: (e, _) => _Message('Error: $e'),
       data: (firebaseUser) {
         if (firebaseUser == null) return const LoginScreen();
@@ -28,12 +29,11 @@ class AuthGate extends ConsumerWidget {
           return const VerifyEmailScreen();
         }
 
-        // Register this device for push notifications (runs once per user)
         ref.read(messagingServiceProvider).init(firebaseUser.uid);
 
         final appUser = ref.watch(appUserProvider);
         return appUser.when(
-          loading: () => const _Loading(),
+          loading: () => const SplashScreen(),
           error: (e, _) => _Message('Error: $e'),
           data: (user) {
             if (user == null) return const _Message('Profile not found');
@@ -52,14 +52,6 @@ class AuthGate extends ConsumerWidget {
       },
     );
   }
-}
-
-class _Loading extends StatelessWidget {
-  const _Loading();
-
-  @override
-  Widget build(BuildContext context) =>
-      const Scaffold(body: Center(child: CircularProgressIndicator()));
 }
 
 class _Message extends StatelessWidget {

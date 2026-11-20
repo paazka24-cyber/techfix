@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 
@@ -19,7 +20,7 @@ class AppTheme {
       seedColor: AppColors.primary,
       brightness: Brightness.dark,
     ).copyWith(
-      primary: AppColors.secondary, // lighter blue reads better on dark
+      primary: AppColors.secondary,
       secondary: AppColors.secondary,
       tertiary: AppColors.accent,
     );
@@ -29,7 +30,16 @@ class AppTheme {
   static ThemeData _build(ColorScheme scheme) {
     return ThemeData(
       useMaterial3: true,
-      colorScheme: scheme,
+      colorScheme: scheme,PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: const FadeForwardsPageTransitionsBuilder(),
+          TargetPlatform.iOS: const CupertinoPageTransitionsBuilder(),
+          TargetPlatform.windows: const FadeForwardsPageTransitionsBuilder(),
+          TargetPlatform.macOS: const CupertinoPageTransitionsBuilder(),
+          TargetPlatform.linux: const CupertinoPageTransitionsBuilder(),
+          TargetPlatform.linux: FadeForwardsPageTransitionsBuilder(),
+        },
+      ),
       appBarTheme: AppBarTheme(
         centerTitle: false,
         backgroundColor: scheme.surface,
@@ -39,6 +49,7 @@ class AppTheme {
       ),
       cardTheme: CardThemeData(
         elevation: 0,
+        margin: const EdgeInsets.symmetric(vertical: 5),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
           side: BorderSide(color: scheme.outlineVariant),
@@ -64,6 +75,26 @@ class AppTheme {
             borderRadius: BorderRadius.circular(10),
           ),
         ),
+      ),
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+      ),
+      dialogTheme: DialogThemeData(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: scheme.surface,
+        indicatorColor: scheme.primaryContainer,
+      ),
+      tabBarTheme: TabBarThemeData(
+        indicatorColor: scheme.primary,
+        labelColor: scheme.primary,
+        unselectedLabelColor: scheme.onSurfaceVariant,
       ),
     );
   }
