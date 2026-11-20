@@ -1,5 +1,5 @@
 name: techfix
-description: Device Repair & Technician Booking Platform
+description: Device Repair & Technician Booking Platform built with Flutter and Firebase.
 publish_to: none
 version: 1.0.0+1
 
