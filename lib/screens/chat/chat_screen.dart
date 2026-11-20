@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/message.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/chat_providers.dart';
+import '../../providers/notification_providers.dart';
+import '../../providers/repair_providers.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   final String requestId;
@@ -40,6 +42,29 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               createdAt: DateTime.now(),
             ),
           );
+
+      // Notify the other person
+      try {
+        final req = await ref
+            .read(repairRepositoryProvider)
+            .watchRequest(widget.requestId)
+            .first;
+        if (req != null) {
+          final other =
+              me.uid == req.customerId ? req.technicianId : req.customerId;
+          if (other != null) {
+            await ref.read(notifierProvider).newMessage(
+                  toUserId: other,
+                  fromUserId: me.uid,
+                  senderName: me.fullName,
+                  text: text,
+                  requestId: widget.requestId,
+                );
+          }
+        }
+      } catch (_) {
+        // message is sent; ignore notification errors
+      }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -65,7 +90,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final myUid = ref.watch(authStateProvider).value?.uid ?? '';
     final messages = ref.watch(messagesProvider(widget.requestId));
 
-    // Mark incoming messages as read whenever the list changes
     ref.listen(messagesProvider(widget.requestId), (_, next) {
       final list = next.value;
       if (list == null) return;
@@ -139,7 +163,7 @@ class _Bubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final seen = message.readBy.length > 1; // sender + the other person
+    final seen = message.readBy.length > 1;
     final t = message.createdAt;
     final time =
         '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';

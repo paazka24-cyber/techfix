@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/repair_request.dart';
+import '../../providers/auth_providers.dart';
+import '../../providers/notification_providers.dart';
 import '../../providers/repair_providers.dart';
 import '../../widgets/image_gallery.dart';
 import '../../widgets/status_chip.dart';
@@ -96,9 +98,25 @@ class TechnicianRequestScreen extends ConsumerWidget {
                             child: Text(RepairStatus.label(s)),
                           ))
                       .toList(),
-                  onChanged: (s) {
+                  onChanged: (s) async {
                     if (s == null) return;
-                    ref.read(repairRepositoryProvider).updateStatus(r.id, s);
+                    final me = ref.read(authStateProvider).value;
+                    await ref
+                        .read(repairRepositoryProvider)
+                        .updateStatus(r.id, s);
+                    if (me == null) return;
+                    try {
+                      await ref.read(notifierProvider).statusChanged(
+                            customerId: r.customerId,
+                            technicianId: me.uid,
+                            requestId: r.id,
+                            device: '${r.categoryName} ${r.deviceModel}',
+                            statusLabel: RepairStatus.label(s),
+                            completed: s == RepairStatus.completed,
+                          );
+                    } catch (_) {
+                      // status is saved; ignore notification errors
+                    }
                   },
                 ),
             ],

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth_providers.dart';
+import '../../providers/notification_providers.dart';
 import '../../providers/repair_providers.dart';
 import '../../widgets/image_gallery.dart';
+import '../../widgets/notification_bell.dart';
 import '../../widgets/status_chip.dart';
 import 'technician_profile_tab.dart';
 import 'technician_request_screen.dart';
@@ -19,6 +21,7 @@ class TechnicianHome extends ConsumerWidget {
         appBar: AppBar(
           title: const Text('Technician'),
           actions: [
+            const NotificationBell(),
             IconButton(
               tooltip: 'Logout',
               icon: const Icon(Icons.logout),
@@ -120,6 +123,20 @@ class _AvailableTab extends ConsumerWidget {
                                             'Could not accept. Someone else may have taken it.'),
                                       ),
                                     );
+                                    return;
+                                  }
+                                  try {
+                                    await ref
+                                        .read(notifierProvider)
+                                        .requestAccepted(
+                                          customerId: r.customerId,
+                                          technicianId: me.uid,
+                                          requestId: r.id,
+                                          device:
+                                              '${r.categoryName} ${r.deviceModel}',
+                                        );
+                                  } catch (_) {
+                                    // accepted already; ignore notification errors
                                   }
                                 },
                           child: const Text('Accept'),

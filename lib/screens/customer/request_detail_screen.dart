@@ -7,8 +7,8 @@ import '../../widgets/image_gallery.dart';
 import '../../widgets/review_tile.dart';
 import '../../widgets/status_chip.dart';
 import '../../widgets/video_player_widget.dart';
-import 'rate_technician_dialog.dart';
 import '../chat/chat_screen.dart';
+import 'rate_technician_dialog.dart';
 
 class RequestDetailScreen extends ConsumerWidget {
   final String requestId;

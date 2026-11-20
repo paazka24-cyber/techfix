@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../models/device_category.dart';
 import '../../models/repair_request.dart';
 import '../../providers/auth_providers.dart';
+import '../../providers/notification_providers.dart';
 import '../../providers/repair_providers.dart';
 import '../../providers/storage_providers.dart';
 
@@ -121,6 +122,21 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
               updatedAt: now,
             ),
           );
+
+      // Notify every technician about the new request
+      try {
+        final techs =
+            await ref.read(userRepositoryProvider).watchTechnicians().first;
+        await ref.read(notifierProvider).newRequest(
+              technicianIds: techs.map((t) => t.uid).toList(),
+              fromUserId: user.uid,
+              requestId: '',
+              device: '${_category!.name} ${_modelController.text.trim()}',
+            );
+      } catch (_) {
+        // the request is saved; a failed notification must not block it
+      }
+
       if (!mounted) return;
       Navigator.pop(context);
       _snack('Repair request submitted');
@@ -129,7 +145,9 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
     } catch (e) {
       debugPrint('UPLOAD ERROR: $e');
       _snack('Upload error: $e');
-    } finally {}
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override

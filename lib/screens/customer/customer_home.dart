@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/repair_providers.dart';
+import '../../widgets/notification_bell.dart';
 import '../../widgets/status_chip.dart';
 import 'create_request_screen.dart';
 import 'request_detail_screen.dart';
@@ -18,6 +19,7 @@ class CustomerHome extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('My Repairs'),
         actions: [
+          const NotificationBell(),
           IconButton(
             tooltip: 'Technicians',
             icon: const Icon(Icons.engineering),
