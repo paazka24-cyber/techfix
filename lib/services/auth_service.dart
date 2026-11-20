@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -32,6 +33,12 @@ class AuthService {
     await _auth.currentUser?.reload();
   }
 
-  Future<UserCredential> signInWithGoogle() =>
-      _auth.signInWithProvider(GoogleAuthProvider());
+  Future<UserCredential> signInWithGoogle() {
+    final provider = GoogleAuthProvider();
+    // Web uses a popup, Android/iOS use the native provider flow
+    if (kIsWeb) {
+      return _auth.signInWithPopup(provider);
+    }
+    return _auth.signInWithProvider(provider);
+  }
 }
