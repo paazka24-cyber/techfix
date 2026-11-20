@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 
@@ -30,30 +29,13 @@ class AppTheme {
   static ThemeData _build(ColorScheme scheme) {
     return ThemeData(
       useMaterial3: true,
-      colorScheme: scheme,PageTransitionsTheme(
-        builders: {
-          TargetPlatform.android: const FadeForwardsPageTransitionsBuilder(),
-          TargetPlatform.iOS: const CupertinoPageTransitionsBuilder(),
-          TargetPlatform.windows: const FadeForwardsPageTransitionsBuilder(),
-          TargetPlatform.macOS: const CupertinoPageTransitionsBuilder(),
-          TargetPlatform.linux: const CupertinoPageTransitionsBuilder(),
-          TargetPlatform.linux: FadeForwardsPageTransitionsBuilder(),
-        },
-      ),
+      colorScheme: scheme,
       appBarTheme: AppBarTheme(
         centerTitle: false,
         backgroundColor: scheme.surface,
         foregroundColor: scheme.onSurface,
         elevation: 0,
         scrolledUnderElevation: 1,
-      ),
-      cardTheme: CardThemeData(
-        elevation: 0,
-        margin: const EdgeInsets.symmetric(vertical: 5),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: BorderSide(color: scheme.outlineVariant),
-        ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
@@ -82,19 +64,9 @@ class AppTheme {
           borderRadius: BorderRadius.circular(10),
         ),
       ),
-      dialogTheme: DialogThemeData(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-      ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: scheme.surface,
         indicatorColor: scheme.primaryContainer,
-      ),
-      tabBarTheme: TabBarThemeData(
-        indicatorColor: scheme.primary,
-        labelColor: scheme.primary,
-        unselectedLabelColor: scheme.onSurfaceVariant,
       ),
     );
   }
