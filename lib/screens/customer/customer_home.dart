@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/repair_providers.dart';
+import '../../widgets/empty_state.dart';
 import '../../widgets/notification_bell.dart';
-import '../../widgets/status_chip.dart';
+import '../../widgets/request_card.dart';
 import '../../widgets/theme_toggle_button.dart';
 import 'create_request_screen.dart';
 import 'request_detail_screen.dart';
@@ -11,6 +12,11 @@ import 'technicians_screen.dart';
 
 class CustomerHome extends ConsumerWidget {
   const CustomerHome({super.key});
+
+  void _newRequest(BuildContext context) => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const CreateRequestScreen()),
+      );
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -38,10 +44,7 @@ class CustomerHome extends ConsumerWidget {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const CreateRequestScreen()),
-        ),
+        onPressed: () => _newRequest(context),
         icon: const Icon(Icons.add),
         label: const Text('New request'),
       ),
@@ -50,31 +53,26 @@ class CustomerHome extends ConsumerWidget {
         error: (e, _) => Center(child: Text('Error: $e')),
         data: (list) {
           if (list.isEmpty) {
-            return const Center(
-              child: Text(
-                  'No repair requests yet.\nTap "New request" to start.',
-                  textAlign: TextAlign.center),
+            return EmptyState(
+              icon: Icons.build_circle_outlined,
+              title: 'No repairs yet',
+              message:
+                  'Create your first request and a technician will pick it up.',
+              actionLabel: 'New request',
+              onAction: () => _newRequest(context),
             );
           }
           return ListView.builder(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 90),
             itemCount: list.length,
             itemBuilder: (context, i) {
               final r = list[i];
-              return Card(
-                child: ListTile(
-                  title: Text('${r.categoryName} - ${r.deviceModel}'),
-                  subtitle: Text(
-                    r.problemDescription,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  trailing: StatusChip(r.status),
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => RequestDetailScreen(requestId: r.id),
-                    ),
+              return RequestCard(
+                request: r,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => RequestDetailScreen(requestId: r.id),
                   ),
                 ),
               );

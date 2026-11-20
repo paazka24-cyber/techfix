@@ -10,6 +10,8 @@ import '../../widgets/theme_toggle_button.dart';
 import 'technician_profile_tab.dart';
 import 'technician_request_screen.dart';
 import 'technician_reviews_tab.dart';
+import '../../widgets/empty_state.dart';
+import '../../widgets/request_card.dart';
 
 class TechnicianHome extends ConsumerWidget {
   const TechnicianHome({super.key});
@@ -168,28 +170,24 @@ class _JobsTab extends ConsumerWidget {
       error: (e, _) => Center(child: Text('Error: $e')),
       data: (list) {
         if (list.isEmpty) {
-          return const Center(child: Text('You have no jobs yet.'));
+          return const EmptyState(
+            icon: Icons.work_outline,
+            title: 'No jobs yet',
+            message: 'Accept a request from the Available tab to see it here.',
+          );
         }
         return ListView.builder(
           padding: const EdgeInsets.all(12),
           itemCount: list.length,
           itemBuilder: (context, i) {
             final r = list[i];
-            return Card(
-              child: ListTile(
-                title: Text('${r.categoryName} - ${r.deviceModel}'),
-                subtitle: Text(
-                  '${r.customerName}\n${r.problemDescription}',
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                isThreeLine: true,
-                trailing: StatusChip(r.status),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => TechnicianRequestScreen(requestId: r.id),
-                  ),
+            return RequestCard(
+              request: r,
+              extraLine: 'Customer: ${r.customerName}',
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => TechnicianRequestScreen(requestId: r.id),
                 ),
               ),
             );
