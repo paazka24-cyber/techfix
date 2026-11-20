@@ -6,6 +6,7 @@ import '../../providers/repair_providers.dart';
 import '../../widgets/image_gallery.dart';
 import '../../widgets/notification_bell.dart';
 import '../../widgets/status_chip.dart';
+import '../../widgets/theme_toggle_button.dart';
 import 'technician_profile_tab.dart';
 import 'technician_request_screen.dart';
 import 'technician_reviews_tab.dart';
@@ -21,6 +22,7 @@ class TechnicianHome extends ConsumerWidget {
         appBar: AppBar(
           title: const Text('Technician'),
           actions: [
+            const ThemeToggleButton(),
             const NotificationBell(),
             IconButton(
               tooltip: 'Logout',

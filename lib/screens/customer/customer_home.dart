@@ -4,6 +4,7 @@ import '../../providers/auth_providers.dart';
 import '../../providers/repair_providers.dart';
 import '../../widgets/notification_bell.dart';
 import '../../widgets/status_chip.dart';
+import '../../widgets/theme_toggle_button.dart';
 import 'create_request_screen.dart';
 import 'request_detail_screen.dart';
 import 'technicians_screen.dart';
@@ -19,6 +20,7 @@ class CustomerHome extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('My Repairs'),
         actions: [
+          const ThemeToggleButton(),
           const NotificationBell(),
           IconButton(
             tooltip: 'Technicians',

@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth_providers.dart';
+import '../../widgets/theme_toggle_button.dart';
 import 'forgot_password_screen.dart';
 import 'register_screen.dart';
 
@@ -34,7 +35,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             _emailController.text.trim(),
             _passwordController.text,
           );
-      // No navigation needed: AuthGate switches screens by itself
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -81,7 +81,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
+      appBar: AppBar(
+        title: const Text('Login'),
+        actions: const [ThemeToggleButton()],
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Form(
@@ -96,6 +99,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ? 'Enter a valid email'
                     : null,
               ),
+              const SizedBox(height: 12),
               TextFormField(
                 controller: _passwordController,
                 obscureText: true,

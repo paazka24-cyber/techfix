@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth_providers.dart';
+import '../../widgets/theme_toggle_button.dart';
 import 'admin_categories_tab.dart';
 import 'admin_overview_tab.dart';
 import 'admin_requests_tab.dart';
@@ -17,6 +18,7 @@ class AdminHome extends ConsumerWidget {
         appBar: AppBar(
           title: const Text('Admin Dashboard'),
           actions: [
+            const ThemeToggleButton(),
             IconButton(
               tooltip: 'Logout',
               icon: const Icon(Icons.logout),
