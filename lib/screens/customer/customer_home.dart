@@ -7,35 +7,35 @@ import '../../widgets/notification_bell.dart';
 import '../../widgets/request_card.dart';
 import '../../widgets/theme_toggle_button.dart';
 import 'create_request_screen.dart';
+import 'customer_profile_tab.dart';
 import 'request_detail_screen.dart';
 import 'technicians_screen.dart';
 
-class CustomerHome extends ConsumerWidget {
+class CustomerHome extends ConsumerStatefulWidget {
   const CustomerHome({super.key});
 
-  void _newRequest(BuildContext context) => Navigator.push(
+  @override
+  ConsumerState<CustomerHome> createState() => _CustomerHomeState();
+}
+
+class _CustomerHomeState extends ConsumerState<CustomerHome> {
+  int _index = 0;
+
+  static const _titles = ['My Repairs', 'Technicians', 'My Profile'];
+
+  void _newRequest() => Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => const CreateRequestScreen()),
       );
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final requests = ref.watch(myRequestsProvider);
-
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Repairs'),
+        title: Text(_titles[_index]),
         actions: [
           const ThemeToggleButton(),
           const NotificationBell(),
-          IconButton(
-            tooltip: 'Technicians',
-            icon: const Icon(Icons.engineering),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const TechniciansScreen()),
-            ),
-          ),
           IconButton(
             tooltip: 'Logout',
             icon: const Icon(Icons.logout),
@@ -43,43 +43,85 @@ class CustomerHome extends ConsumerWidget {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _newRequest(context),
-        icon: const Icon(Icons.add),
-        label: const Text('New request'),
+      floatingActionButton: _index == 0
+          ? FloatingActionButton.extended(
+              onPressed: _newRequest,
+              icon: const Icon(Icons.add),
+              label: const Text('New request'),
+            )
+          : null,
+      body: IndexedStack(
+        index: _index,
+        children: [
+          _RepairsList(onNew: _newRequest),
+          const TechniciansScreen(),
+          const CustomerProfileTab(),
+        ],
       ),
-      body: requests.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
-        data: (list) {
-          if (list.isEmpty) {
-            return EmptyState(
-              icon: Icons.build_circle_outlined,
-              title: 'No repairs yet',
-              message:
-                  'Create your first request and a technician will pick it up.',
-              actionLabel: 'New request',
-              onAction: () => _newRequest(context),
-            );
-          }
-          return ListView.builder(
-            padding: const EdgeInsets.fromLTRB(12, 12, 12, 90),
-            itemCount: list.length,
-            itemBuilder: (context, i) {
-              final r = list[i];
-              return RequestCard(
-                request: r,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => RequestDetailScreen(requestId: r.id),
-                  ),
-                ),
-              );
-            },
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _index,
+        onDestinationSelected: (i) => setState(() => _index = i),
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.build_outlined),
+            selectedIcon: Icon(Icons.build),
+            label: 'Repairs',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.engineering_outlined),
+            selectedIcon: Icon(Icons.engineering),
+            label: 'Technicians',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.person),
+            label: 'Profile',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RepairsList extends ConsumerWidget {
+  final VoidCallback onNew;
+  const _RepairsList({required this.onNew});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final requests = ref.watch(myRequestsProvider);
+
+    return requests.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(child: Text('Error: $e')),
+      data: (list) {
+        if (list.isEmpty) {
+          return EmptyState(
+            icon: Icons.build_circle_outlined,
+            title: 'No repairs yet',
+            message:
+                'Create your first request and a technician will pick it up.',
+            actionLabel: 'New request',
+            onAction: onNew,
           );
-        },
-      ),
+        }
+        return ListView.builder(
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 90),
+          itemCount: list.length,
+          itemBuilder: (context, i) {
+            final r = list[i];
+            return RequestCard(
+              request: r,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => RequestDetailScreen(requestId: r.id),
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

@@ -25,4 +25,17 @@ class UserRepository {
       'bio': bio,
     });
   }
+
+  Future<void> updateCustomerProfile(
+    String uid, {
+    required String fullName,
+    required String phoneNumber,
+    required String address,
+  }) {
+    return _col.doc(uid).update({
+      'fullName': fullName,
+      'phoneNumber': phoneNumber,
+      'address': address,
+    });
+  }
 }
