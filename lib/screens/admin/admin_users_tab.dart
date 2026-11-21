@@ -44,6 +44,7 @@ class AdminUsersTab extends ConsumerWidget {
     final myUid = ref.watch(authStateProvider).value?.uid;
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       floatingActionButton: FloatingActionButton.extended(
         icon: const Icon(Icons.person_add),
         label: const Text('Add technician'),

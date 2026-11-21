@@ -21,6 +21,7 @@ class TechnicianHome extends ConsumerWidget {
     return DefaultTabController(
       length: 4,
       child: Scaffold(
+        backgroundColor: Colors.transparent,
         appBar: AppBar(
           title: const Text('Technician'),
           actions: [

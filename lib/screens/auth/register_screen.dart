@@ -74,6 +74,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(title: const Text('Create Account')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),

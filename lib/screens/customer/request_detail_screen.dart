@@ -41,6 +41,7 @@ class RequestDetailScreen extends ConsumerWidget {
     final request = ref.watch(requestProvider(requestId));
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(title: const Text('Repair Details')),
       body: request.when(
         loading: () => const Center(child: CircularProgressIndicator()),

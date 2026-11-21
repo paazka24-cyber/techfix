@@ -34,6 +34,7 @@ class AdminCategoriesTab extends ConsumerWidget {
     final repo = ref.read(adminRepositoryProvider);
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       floatingActionButton: FloatingActionButton.extended(
         icon: const Icon(Icons.add),
         label: const Text('Add category'),

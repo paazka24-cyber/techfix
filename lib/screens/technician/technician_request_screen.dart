@@ -19,6 +19,7 @@ class TechnicianRequestScreen extends ConsumerWidget {
     final request = ref.watch(requestProvider(requestId));
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(title: const Text('Job Details')),
       body: request.when(
         loading: () => const Center(child: CircularProgressIndicator()),

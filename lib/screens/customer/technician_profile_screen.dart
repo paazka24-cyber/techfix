@@ -17,6 +17,7 @@ class TechnicianProfileScreen extends ConsumerWidget {
     final reviews = ref.watch(technicianReviewsProvider(t.uid));
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(title: const Text('Technician Profile')),
       body: ListView(
         padding: const EdgeInsets.all(12),

@@ -5,6 +5,7 @@ import 'core/theme/app_theme.dart';
 import 'firebase_options.dart';
 import 'providers/theme_provider.dart';
 import 'routes/auth_gate.dart';
+import 'widgets/gradient_background.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,8 +29,7 @@ class MyApp extends ConsumerWidget {
       themeMode: mode,
       // Keep content in a centered column on wide screens (web/tablet)
       builder: (context, child) {
-        return ColoredBox(
-          color: Theme.of(context).colorScheme.surfaceContainerLowest,
+        return GradientBackground(
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 720),

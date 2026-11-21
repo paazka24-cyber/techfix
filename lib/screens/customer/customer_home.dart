@@ -31,6 +31,7 @@ class _CustomerHomeState extends ConsumerState<CustomerHome> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(_titles[_index]),
         actions: [

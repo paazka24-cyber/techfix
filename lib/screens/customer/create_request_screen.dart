@@ -272,6 +272,7 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
         : repairServices.where((s) => s.category == _filter).toList();
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(title: const Text('Book a repair')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),

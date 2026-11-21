@@ -93,6 +93,7 @@ class NotificationsScreen extends ConsumerWidget {
     }
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('Notifications'),
         actions: [

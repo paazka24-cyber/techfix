@@ -41,6 +41,7 @@ class _AdminHomeState extends ConsumerState<AdminHome>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('Admin Dashboard'),
         actions: [
