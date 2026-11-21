@@ -21,7 +21,7 @@ class CreateRequestScreen extends ConsumerStatefulWidget {
 
 class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
   static const _maxImages = 3;
-  static const _maxVideoBytes = 40 * 1024 * 1024; // 40 MB
+  static const _maxVideoBytes = 40 * 1024 * 1024;
 
   final _formKey = GlobalKey<FormState>();
   final _modelController = TextEditingController();
@@ -123,7 +123,6 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
             ),
           );
 
-      // Notify every technician about the new request
       try {
         final techs =
             await ref.read(userRepositoryProvider).watchTechnicians().first;
@@ -133,9 +132,7 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
               requestId: '',
               device: '${_category!.name} ${_modelController.text.trim()}',
             );
-      } catch (_) {
-        // the request is saved; a failed notification must not block it
-      }
+      } catch (_) {}
 
       if (!mounted) return;
       Navigator.pop(context);
@@ -158,17 +155,21 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('New Repair Request')),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Form(
           key: _formKey,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               categories.when(
                 loading: () => const LinearProgressIndicator(),
                 error: (e, _) => Text('Could not load categories: $e'),
                 data: (list) => DropdownButtonFormField<DeviceCategory>(
                   initialValue: _category,
-                  decoration: const InputDecoration(labelText: 'Device type'),
+                  decoration: const InputDecoration(
+                    labelText: 'Device type',
+                    prefixIcon: Icon(Icons.devices_outlined),
+                  ),
                   items: list
                       .map((c) =>
                           DropdownMenuItem(value: c, child: Text(c.name)))
@@ -177,16 +178,19 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
                   validator: (v) => v == null ? 'Select a device type' : null,
                 ),
               ),
+              const SizedBox(height: 14),
               TextFormField(
                 controller: _modelController,
                 decoration: const InputDecoration(
                   labelText: 'Brand and model',
                   hintText: 'e.g. Samsung Galaxy A54',
+                  prefixIcon: Icon(Icons.smartphone_outlined),
                 ),
                 validator: (v) => (v == null || v.trim().isEmpty)
                     ? 'Enter the device model'
                     : null,
               ),
+              const SizedBox(height: 14),
               TextFormField(
                 controller: _problemController,
                 maxLines: 4,
@@ -198,18 +202,11 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
                     ? 'Please describe the problem (at least 10 characters)'
                     : null,
               ),
-
-              // ---------- Photos ----------
-              const SizedBox(height: 20),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Photos (${_images.length}/$_maxImages)',
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
-              ),
+              const SizedBox(height: 24),
+              Text('Photos (${_images.length}/$_maxImages)',
+                  style: Theme.of(context).textTheme.titleSmall),
               const SizedBox(height: 8),
-              if (_previews.isNotEmpty)
+              if (_previews.isNotEmpty) ...[
                 SizedBox(
                   height: 100,
                   child: ListView.separated(
@@ -240,8 +237,11 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
                     ),
                   ),
                 ),
-              const SizedBox(height: 8),
-              Row(
+                const SizedBox(height: 8),
+              ],
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
                 children: [
                   OutlinedButton.icon(
                     onPressed: (_isLoading || full)
@@ -250,8 +250,7 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
                     icon: const Icon(Icons.photo_library),
                     label: const Text('Gallery'),
                   ),
-                  if (!kIsWeb) ...[
-                    const SizedBox(width: 8),
+                  if (!kIsWeb)
                     OutlinedButton.icon(
                       onPressed: (_isLoading || full)
                           ? null
@@ -259,19 +258,11 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
                       icon: const Icon(Icons.photo_camera),
                       label: const Text('Camera'),
                     ),
-                  ],
                 ],
               ),
-
-              // ---------- Video ----------
-              const SizedBox(height: 20),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Video (optional, max 40 MB)',
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
-              ),
+              const SizedBox(height: 24),
+              Text('Video (optional, max 40 MB)',
+                  style: Theme.of(context).textTheme.titleSmall),
               const SizedBox(height: 8),
               if (_video != null)
                 ListTile(
@@ -285,7 +276,9 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
                         _isLoading ? null : () => setState(() => _video = null),
                   ),
                 ),
-              Row(
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
                 children: [
                   OutlinedButton.icon(
                     onPressed: (_isLoading || _video != null)
@@ -294,8 +287,7 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
                     icon: const Icon(Icons.video_library),
                     label: const Text('Choose video'),
                   ),
-                  if (!kIsWeb) ...[
-                    const SizedBox(width: 8),
+                  if (!kIsWeb)
                     OutlinedButton.icon(
                       onPressed: (_isLoading || _video != null)
                           ? null
@@ -303,28 +295,24 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
                       icon: const Icon(Icons.videocam),
                       label: const Text('Record'),
                     ),
-                  ],
                 ],
               ),
-
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: _isLoading ? null : _submit,
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('Submit request'),
-                ),
+              const SizedBox(height: 28),
+              FilledButton(
+                onPressed: _isLoading ? null : _submit,
+                child: _isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Submit request'),
               ),
               if (_isLoading && _video != null)
                 const Padding(
                   padding: EdgeInsets.only(top: 12),
-                  child: Text('Uploading, videos can take a minute...'),
+                  child: Text('Uploading, videos can take a minute...',
+                      textAlign: TextAlign.center),
                 ),
             ],
           ),

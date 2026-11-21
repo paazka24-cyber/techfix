@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../models/repair_request.dart';
 import '../../providers/admin_providers.dart';
 import '../../widgets/status_chip.dart';
+import 'admin_requests_tab.dart';
 
 class AdminOverviewTab extends ConsumerWidget {
-  const AdminOverviewTab({super.key});
+  final void Function(String roleFilter) onOpenUsers;
+  final void Function(String requestFilter) onOpenRequests;
+  const AdminOverviewTab({
+    super.key,
+    required this.onOpenUsers,
+    required this.onOpenRequests,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -23,30 +29,26 @@ class AdminOverviewTab extends ConsumerWidget {
     final r = requests.value!;
     final customers = u.where((x) => x.role == 'customer').length;
     final techs = u.where((x) => x.role == 'technician').length;
-    final active = r
-        .where((x) =>
-            x.status != RepairStatus.completed &&
-            x.status != RepairStatus.delivered &&
-            x.status != RepairStatus.cancelled)
-        .length;
-    final done = r
-        .where((x) =>
-            x.status == RepairStatus.completed ||
-            x.status == RepairStatus.delivered)
-        .length;
+    final active = r.where((x) => matchesRequestFilter(x, 'active')).length;
+    final done = r.where((x) => matchesRequestFilter(x, 'done')).length;
 
-    Widget stat(String label, int value, IconData icon) => Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, size: 28),
-                const SizedBox(height: 8),
-                Text('$value',
-                    style: Theme.of(context).textTheme.headlineMedium),
-                Text(label),
-              ],
+    Widget stat(String label, int value, IconData icon, VoidCallback onTap) =>
+        Card(
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon, size: 28),
+                  const SizedBox(height: 8),
+                  Text('$value',
+                      style: Theme.of(context).textTheme.headlineMedium),
+                  Text(label),
+                ],
+              ),
             ),
           ),
         );
@@ -59,11 +61,17 @@ class AdminOverviewTab extends ConsumerWidget {
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           childAspectRatio: 1.5,
+          mainAxisSpacing: 8,
+          crossAxisSpacing: 8,
           children: [
-            stat('Customers', customers, Icons.people),
-            stat('Technicians', techs, Icons.engineering),
-            stat('Active repairs', active, Icons.build),
-            stat('Completed', done, Icons.check_circle),
+            stat('Customers', customers, Icons.people,
+                () => onOpenUsers('customer')),
+            stat('Technicians', techs, Icons.engineering,
+                () => onOpenUsers('technician')),
+            stat('Active repairs', active, Icons.build,
+                () => onOpenRequests('active')),
+            stat('Completed', done, Icons.check_circle,
+                () => onOpenRequests('done')),
           ],
         ),
         const SizedBox(height: 16),
@@ -74,6 +82,7 @@ class AdminOverviewTab extends ConsumerWidget {
                 title: Text('${x.categoryName} - ${x.deviceModel}'),
                 subtitle: Text('By ${x.customerName}'),
                 trailing: StatusChip(x.status),
+                onTap: () => onOpenRequests('all'),
               ),
             )),
       ],

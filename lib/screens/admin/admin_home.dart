@@ -7,42 +7,72 @@ import 'admin_overview_tab.dart';
 import 'admin_requests_tab.dart';
 import 'admin_users_tab.dart';
 
-class AdminHome extends ConsumerWidget {
+class AdminHome extends ConsumerStatefulWidget {
   const AdminHome({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return DefaultTabController(
-      length: 4,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Admin Dashboard'),
-          actions: [
-            const ThemeToggleButton(),
-            IconButton(
-              tooltip: 'Logout',
-              icon: const Icon(Icons.logout),
-              onPressed: () => ref.read(authRepositoryProvider).logout(),
-            ),
-          ],
-          bottom: const TabBar(
-            isScrollable: true,
-            tabs: [
-              Tab(text: 'Overview'),
-              Tab(text: 'Users'),
-              Tab(text: 'Requests'),
-              Tab(text: 'Categories'),
-            ],
+  ConsumerState<AdminHome> createState() => _AdminHomeState();
+}
+
+class _AdminHomeState extends ConsumerState<AdminHome>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabs = TabController(length: 4, vsync: this);
+  final _userFilter = ValueNotifier<String>('all');
+  final _requestFilter = ValueNotifier<String>('all');
+
+  @override
+  void dispose() {
+    _tabs.dispose();
+    _userFilter.dispose();
+    _requestFilter.dispose();
+    super.dispose();
+  }
+
+  void _openUsers(String filter) {
+    _userFilter.value = filter;
+    _tabs.animateTo(1);
+  }
+
+  void _openRequests(String filter) {
+    _requestFilter.value = filter;
+    _tabs.animateTo(2);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Admin Dashboard'),
+        actions: [
+          const ThemeToggleButton(),
+          IconButton(
+            tooltip: 'Logout',
+            icon: const Icon(Icons.logout),
+            onPressed: () => ref.read(authRepositoryProvider).logout(),
           ),
-        ),
-        body: const TabBarView(
-          children: [
-            AdminOverviewTab(),
-            AdminUsersTab(),
-            AdminRequestsTab(),
-            AdminCategoriesTab(),
+        ],
+        bottom: TabBar(
+          controller: _tabs,
+          isScrollable: true,
+          tabs: const [
+            Tab(text: 'Overview'),
+            Tab(text: 'Users'),
+            Tab(text: 'Requests'),
+            Tab(text: 'Categories'),
           ],
         ),
+      ),
+      body: TabBarView(
+        controller: _tabs,
+        children: [
+          AdminOverviewTab(
+            onOpenUsers: _openUsers,
+            onOpenRequests: _openRequests,
+          ),
+          AdminUsersTab(filter: _userFilter),
+          AdminRequestsTab(filter: _requestFilter),
+          const AdminCategoriesTab(),
+        ],
       ),
     );
   }

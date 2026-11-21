@@ -69,32 +69,61 @@ class _TechnicianProfileTabState extends ConsumerState<TechnicianProfileTab> {
 
   @override
   Widget build(BuildContext context) {
+    final user = ref.watch(appUserProvider).value;
+    final scheme = Theme.of(context).colorScheme;
+    final name = user?.fullName ?? '';
+
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       child: Form(
         key: _formKey,
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            Center(
+              child: CircleAvatar(
+                radius: 44,
+                backgroundColor: scheme.primaryContainer,
+                child: Text(
+                  name.isEmpty ? '?' : name[0].toUpperCase(),
+                  style:
+                      TextStyle(fontSize: 34, color: scheme.onPrimaryContainer),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Center(child: Text(user?.email ?? '')),
+            const SizedBox(height: 24),
             TextFormField(
               controller: _nameController,
-              decoration: const InputDecoration(labelText: 'Full name'),
+              decoration: const InputDecoration(
+                labelText: 'Full name',
+                prefixIcon: Icon(Icons.person_outline),
+              ),
               validator: (v) =>
                   (v == null || v.trim().isEmpty) ? 'Enter your name' : null,
             ),
+            const SizedBox(height: 14),
             TextFormField(
               controller: _phoneController,
               keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(labelText: 'Phone number'),
+              decoration: const InputDecoration(
+                labelText: 'Phone number',
+                prefixIcon: Icon(Icons.phone_outlined),
+              ),
               validator: (v) =>
                   (v == null || v.trim().isEmpty) ? 'Enter your phone' : null,
             ),
+            const SizedBox(height: 14),
             TextFormField(
               controller: _specController,
               decoration: const InputDecoration(
                 labelText: 'Specialization',
                 hintText: 'e.g. Phone screens and batteries',
+                prefixIcon: Icon(Icons.build_outlined),
               ),
             ),
+            const SizedBox(height: 14),
             TextFormField(
               controller: _bioController,
               maxLines: 4,
@@ -104,18 +133,15 @@ class _TechnicianProfileTabState extends ConsumerState<TechnicianProfileTab> {
               ),
             ),
             const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                onPressed: _isLoading ? null : _save,
-                child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text('Save profile'),
-              ),
+            FilledButton(
+              onPressed: _isLoading ? null : _save,
+              child: _isLoading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('Save profile'),
             ),
           ],
         ),
