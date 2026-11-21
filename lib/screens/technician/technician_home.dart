@@ -3,15 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/notification_providers.dart';
 import '../../providers/repair_providers.dart';
+import '../../widgets/category_icon.dart';
+import '../../widgets/empty_state.dart';
 import '../../widgets/image_gallery.dart';
 import '../../widgets/notification_bell.dart';
-import '../../widgets/status_chip.dart';
+import '../../widgets/request_card.dart';
 import '../../widgets/theme_toggle_button.dart';
 import 'technician_profile_tab.dart';
 import 'technician_request_screen.dart';
 import 'technician_reviews_tab.dart';
-import '../../widgets/empty_state.dart';
-import '../../widgets/request_card.dart';
 
 class TechnicianHome extends ConsumerWidget {
   const TechnicianHome({super.key});
@@ -61,13 +61,18 @@ class _AvailableTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final requests = ref.watch(availableRequestsProvider);
     final me = ref.watch(authStateProvider).value;
+    final scheme = Theme.of(context).colorScheme;
 
     return requests.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(child: Text('Error: $e')),
       data: (list) {
         if (list.isEmpty) {
-          return const Center(child: Text('No open requests right now.'));
+          return const EmptyState(
+            icon: Icons.inbox_outlined,
+            title: 'No open requests',
+            message: 'New customer requests will appear here.',
+          );
         }
         return ListView.builder(
           padding: const EdgeInsets.all(12),
@@ -76,20 +81,46 @@ class _AvailableTab extends ConsumerWidget {
             final r = list[i];
             return Card(
               child: Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(14),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('${r.categoryName} - ${r.deviceModel}',
-                        style: Theme.of(context).textTheme.titleMedium),
-                    const SizedBox(height: 4),
-                    Text('From ${r.customerName}'),
-                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: scheme.primaryContainer,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(categoryIcon(r.categoryName),
+                              color: scheme.onPrimaryContainer),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(r.deviceModel,
+                                  style:
+                                      Theme.of(context).textTheme.titleMedium),
+                              Text('${r.categoryName} · ${r.customerName}',
+                                  style: TextStyle(
+                                      color: scheme.onSurfaceVariant)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
                     Text(r.problemDescription),
-                    const SizedBox(height: 8),
-                    ImageGallery(urls: r.imageUrls),
+                    if (r.imageUrls.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      ImageGallery(urls: r.imageUrls),
+                    ],
                     if (r.videoUrl != null) ...[
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 10),
                       const Row(
                         children: [
                           Icon(Icons.videocam, size: 18),
@@ -98,52 +129,52 @@ class _AvailableTab extends ConsumerWidget {
                         ],
                       ),
                     ],
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 14),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        TextButton(
-                          onPressed: me == null
-                              ? null
-                              : () => ref
-                                  .read(repairRepositoryProvider)
-                                  .reject(r.id, me.uid),
-                          child: const Text('Reject'),
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: me == null
+                                ? null
+                                : () => ref
+                                    .read(repairRepositoryProvider)
+                                    .reject(r.id, me.uid),
+                            child: const Text('Reject'),
+                          ),
                         ),
-                        const SizedBox(width: 8),
-                        FilledButton(
-                          onPressed: me == null
-                              ? null
-                              : () async {
-                                  try {
-                                    await ref
-                                        .read(repairRepositoryProvider)
-                                        .accept(r.id, me.uid);
-                                  } catch (_) {
-                                    if (!context.mounted) return;
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: FilledButton(
+                            onPressed: me == null
+                                ? null
+                                : () async {
+                                    try {
+                                      await ref
+                                          .read(repairRepositoryProvider)
+                                          .accept(r.id, me.uid);
+                                    } catch (_) {
+                                      if (!context.mounted) return;
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(const SnackBar(
                                         content: Text(
                                             'Could not accept. Someone else may have taken it.'),
-                                      ),
-                                    );
-                                    return;
-                                  }
-                                  try {
-                                    await ref
-                                        .read(notifierProvider)
-                                        .requestAccepted(
-                                          customerId: r.customerId,
-                                          technicianId: me.uid,
-                                          requestId: r.id,
-                                          device:
-                                              '${r.categoryName} ${r.deviceModel}',
-                                        );
-                                  } catch (_) {
-                                    // accepted already; ignore notification errors
-                                  }
-                                },
-                          child: const Text('Accept'),
+                                      ));
+                                      return;
+                                    }
+                                    try {
+                                      await ref
+                                          .read(notifierProvider)
+                                          .requestAccepted(
+                                            customerId: r.customerId,
+                                            technicianId: me.uid,
+                                            requestId: r.id,
+                                            device:
+                                                '${r.categoryName} ${r.deviceModel}',
+                                          );
+                                    } catch (_) {}
+                                  },
+                            child: const Text('Accept'),
+                          ),
                         ),
                       ],
                     ),

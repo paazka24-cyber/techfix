@@ -5,6 +5,7 @@ import '../../providers/repair_providers.dart';
 import '../../providers/review_providers.dart';
 import '../../widgets/image_gallery.dart';
 import '../../widgets/review_tile.dart';
+import '../../widgets/section_card.dart';
 import '../../widgets/status_chip.dart';
 import '../../widgets/video_player_widget.dart';
 import '../chat/chat_screen.dart';
@@ -22,13 +23,11 @@ class RequestDetailScreen extends ConsumerWidget {
         content: const Text('This cannot be undone.'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Keep'),
-          ),
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Keep')),
           FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Cancel request'),
-          ),
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Cancel request')),
         ],
       ),
     );
@@ -56,98 +55,123 @@ class RequestDetailScreen extends ConsumerWidget {
                   r.status == RepairStatus.delivered);
 
           return ListView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(12),
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      '${r.categoryName} - ${r.deviceModel}',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                  ),
-                  StatusChip(r.status),
-                ],
-              ),
-              if (r.technicianId != null &&
-                  r.status != RepairStatus.cancelled) ...[
-                const SizedBox(height: 12),
-                FilledButton.icon(
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ChatScreen(
-                        requestId: r.id,
-                        title: 'Chat with technician',
-                      ),
-                    ),
-                  ),
-                  icon: const Icon(Icons.chat),
-                  label: const Text('Chat with technician'),
-                ),
-              ],
-              const SizedBox(height: 16),
-              Text('Problem', style: Theme.of(context).textTheme.labelLarge),
-              const SizedBox(height: 4),
-              Text(r.problemDescription),
-              const SizedBox(height: 16),
-              Text('Photos', style: Theme.of(context).textTheme.labelLarge),
-              const SizedBox(height: 8),
-              ImageGallery(urls: r.imageUrls),
-              if (r.videoUrl != null) ...[
-                const SizedBox(height: 16),
-                Text('Video', style: Theme.of(context).textTheme.labelLarge),
-                const SizedBox(height: 8),
-                VideoPlayerWidget(url: r.videoUrl!),
-              ],
-              const SizedBox(height: 24),
-              Text('Progress', style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 8),
-              if (r.status == RepairStatus.cancelled)
-                const ListTile(
-                  leading: Icon(Icons.cancel, color: Colors.red),
-                  title: Text('This request was cancelled'),
-                )
-              else
-                ...RepairStatus.flow.map((s) {
-                  final done = RepairStatus.flow.indexOf(s) <=
-                      RepairStatus.flow.indexOf(r.status);
-                  return ListTile(
-                    dense: true,
-                    leading: Icon(
-                      done ? Icons.check_circle : Icons.radio_button_unchecked,
-                      color: done ? const Color(0xFF00C853) : Colors.grey,
-                    ),
-                    title: Text(RepairStatus.label(s)),
-                  );
-                }),
-              if (canRate) ...[
-                const SizedBox(height: 24),
-                Text('Your review',
-                    style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 8),
-                ref.watch(requestReviewProvider(r.id)).when(
-                      loading: () => const LinearProgressIndicator(),
-                      error: (e, _) => Text('Error: $e'),
-                      data: (review) => review != null
-                          ? ReviewTile(review: review)
-                          : FilledButton.icon(
-                              onPressed: () => showDialog(
-                                context: context,
-                                builder: (_) =>
-                                    RateTechnicianDialog(request: r),
-                              ),
-                              icon: const Icon(Icons.star),
-                              label: const Text('Rate technician'),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              '${r.categoryName} - ${r.deviceModel}',
+                              style: Theme.of(context).textTheme.titleLarge,
                             ),
-                    ),
-              ],
-              const SizedBox(height: 24),
-              if (canCancel)
-                OutlinedButton(
-                  onPressed: () => _confirmCancel(context, ref),
-                  child: const Text('Cancel request'),
+                          ),
+                          StatusChip(r.status),
+                        ],
+                      ),
+                      if (r.technicianId != null &&
+                          r.status != RepairStatus.cancelled) ...[
+                        const SizedBox(height: 14),
+                        SizedBox(
+                          width: double.infinity,
+                          child: FilledButton.icon(
+                            onPressed: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ChatScreen(
+                                  requestId: r.id,
+                                  title: 'Chat with technician',
+                                ),
+                              ),
+                            ),
+                            icon: const Icon(Icons.chat),
+                            label: const Text('Chat with technician'),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
+              ),
+              SectionCard(
+                title: 'Problem',
+                child: Text(r.problemDescription),
+              ),
+              if (r.imageUrls.isNotEmpty || r.videoUrl != null)
+                SectionCard(
+                  title: 'Media',
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (r.imageUrls.isNotEmpty)
+                        ImageGallery(urls: r.imageUrls),
+                      if (r.videoUrl != null) ...[
+                        const SizedBox(height: 12),
+                        VideoPlayerWidget(url: r.videoUrl!),
+                      ],
+                    ],
+                  ),
+                ),
+              SectionCard(
+                title: 'Progress',
+                child: r.status == RepairStatus.cancelled
+                    ? const ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: Icon(Icons.cancel, color: Colors.red),
+                        title: Text('This request was cancelled'),
+                      )
+                    : Column(
+                        children: RepairStatus.flow.map((s) {
+                          final done = RepairStatus.flow.indexOf(s) <=
+                              RepairStatus.flow.indexOf(r.status);
+                          return ListTile(
+                            dense: true,
+                            contentPadding: EdgeInsets.zero,
+                            leading: Icon(
+                              done
+                                  ? Icons.check_circle
+                                  : Icons.radio_button_unchecked,
+                              color:
+                                  done ? const Color(0xFF00C853) : Colors.grey,
+                            ),
+                            title: Text(RepairStatus.label(s)),
+                          );
+                        }).toList(),
+                      ),
+              ),
+              if (canRate)
+                SectionCard(
+                  title: 'Your review',
+                  child: ref.watch(requestReviewProvider(r.id)).when(
+                        loading: () => const LinearProgressIndicator(),
+                        error: (e, _) => Text('Error: $e'),
+                        data: (review) => review != null
+                            ? ReviewTile(review: review)
+                            : FilledButton.icon(
+                                onPressed: () => showDialog(
+                                  context: context,
+                                  builder: (_) =>
+                                      RateTechnicianDialog(request: r),
+                                ),
+                                icon: const Icon(Icons.star),
+                                label: const Text('Rate technician'),
+                              ),
+                      ),
+                ),
+              if (canCancel)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: OutlinedButton(
+                    onPressed: () => _confirmCancel(context, ref),
+                    child: const Text('Cancel request'),
+                  ),
+                ),
+              const SizedBox(height: 20),
             ],
           );
         },
