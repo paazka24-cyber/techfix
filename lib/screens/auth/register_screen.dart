@@ -87,6 +87,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 validator: (v) =>
                     (v == null || v.trim().isEmpty) ? 'Enter your name' : null,
               ),
+              const SizedBox(height: 12),
               TextFormField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
@@ -95,6 +96,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     ? 'Enter a valid email'
                     : null,
               ),
+              const SizedBox(height: 12),
               TextFormField(
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
@@ -103,6 +105,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     ? 'Enter your phone number'
                     : null,
               ),
+              const SizedBox(height: 12),
               TextFormField(
                 controller: _passwordController,
                 obscureText: true,
