@@ -61,6 +61,9 @@ class RepairRequest {
   final String categoryName;
   final String deviceModel;
   final String problemDescription;
+  final String serviceName;
+  final int estimatedPrice;
+  final String turnaround; // 'standard' or 'express'
   final List<String> imageUrls;
   final String? videoUrl;
   final List<String> rejectedBy;
@@ -77,6 +80,9 @@ class RepairRequest {
     required this.categoryName,
     required this.deviceModel,
     required this.problemDescription,
+    this.serviceName = '',
+    this.estimatedPrice = 0,
+    this.turnaround = 'standard',
     this.imageUrls = const [],
     this.videoUrl,
     this.rejectedBy = const [],
@@ -95,6 +101,9 @@ class RepairRequest {
       categoryName: map['categoryName'] ?? '',
       deviceModel: map['deviceModel'] ?? '',
       problemDescription: map['problemDescription'] ?? '',
+      serviceName: map['serviceName'] ?? '',
+      estimatedPrice: (map['estimatedPrice'] ?? 0).toInt(),
+      turnaround: map['turnaround'] ?? 'standard',
       imageUrls: List<String>.from(map['imageUrls'] ?? []),
       videoUrl: map['videoUrl'],
       rejectedBy: List<String>.from(map['rejectedBy'] ?? []),
@@ -113,6 +122,9 @@ class RepairRequest {
       'categoryName': categoryName,
       'deviceModel': deviceModel,
       'problemDescription': problemDescription,
+      'serviceName': serviceName,
+      'estimatedPrice': estimatedPrice,
+      'turnaround': turnaround,
       'imageUrls': imageUrls,
       'videoUrl': videoUrl,
       'rejectedBy': rejectedBy,

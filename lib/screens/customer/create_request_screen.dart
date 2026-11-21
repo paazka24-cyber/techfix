@@ -4,8 +4,8 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../models/device_category.dart';
 import '../../models/repair_request.dart';
+import '../../models/repair_service.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/notification_providers.dart';
 import '../../providers/repair_providers.dart';
@@ -25,18 +25,24 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
 
   final _formKey = GlobalKey<FormState>();
   final _modelController = TextEditingController();
-  final _problemController = TextEditingController();
+  final _notesController = TextEditingController();
   final _picker = ImagePicker();
   final List<XFile> _images = [];
   final List<Uint8List> _previews = [];
   XFile? _video;
-  DeviceCategory? _category;
+  String _filter = 'All';
+  RepairService? _service;
+  String _turnaround = 'standard';
   bool _isLoading = false;
+
+  int get _total =>
+      (_service?.price ?? 0) +
+      (_turnaround == 'express' ? expressSurcharge : 0);
 
   @override
   void dispose() {
     _modelController.dispose();
-    _problemController.dispose();
+    _notesController.dispose();
     super.dispose();
   }
 
@@ -89,9 +95,24 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
   }
 
   Future<void> _submit() async {
+    if (_service == null) {
+      _snack('Please choose a repair service');
+      return;
+    }
     if (!_formKey.currentState!.validate()) return;
     final user = ref.read(appUserProvider).value;
-    if (user == null || _category == null) return;
+    if (user == null) return;
+    final service = _service!;
+
+    // Match the service category to a Firestore device category
+    final cats = ref.read(categoriesProvider).value ?? [];
+    String categoryId = '';
+    for (final c in cats) {
+      if (c.name.toLowerCase() == service.category.toLowerCase()) {
+        categoryId = c.id;
+        break;
+      }
+    }
 
     setState(() => _isLoading = true);
     try {
@@ -107,15 +128,22 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
         videoUrl = await storage.uploadRepairVideo(user.uid, _video!);
       }
 
+      final notes = _notesController.text.trim();
+      final description =
+          notes.isEmpty ? service.title : '${service.title}. $notes';
+
       final now = DateTime.now();
       await ref.read(repairRepositoryProvider).create(
             RepairRequest(
               customerId: user.uid,
               customerName: user.fullName,
-              categoryId: _category!.id,
-              categoryName: _category!.name,
+              categoryId: categoryId,
+              categoryName: service.category,
               deviceModel: _modelController.text.trim(),
-              problemDescription: _problemController.text.trim(),
+              problemDescription: description,
+              serviceName: service.title,
+              estimatedPrice: _total,
+              turnaround: _turnaround,
               imageUrls: urls,
               videoUrl: videoUrl,
               createdAt: now,
@@ -130,13 +158,13 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
               technicianIds: techs.map((t) => t.uid).toList(),
               fromUserId: user.uid,
               requestId: '',
-              device: '${_category!.name} ${_modelController.text.trim()}',
+              device: '${service.category} ${_modelController.text.trim()}',
             );
       } catch (_) {}
 
       if (!mounted) return;
       Navigator.pop(context);
-      _snack('Repair request submitted');
+      _snack('Booking confirmed');
     } on FirebaseException catch (e) {
       _snack('Could not submit: ${e.code}');
     } catch (e) {
@@ -147,13 +175,104 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
     }
   }
 
+  Widget _serviceTile(RepairService s) {
+    final scheme = Theme.of(context).colorScheme;
+    final selected = _service?.id == s.id;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: () => setState(() => _service = s),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            color: selected
+                ? scheme.primaryContainer.withValues(alpha: 0.5)
+                : null,
+            border: Border.all(
+              color: selected ? scheme.primary : scheme.outlineVariant,
+              width: selected ? 2 : 1,
+            ),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(s.title,
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleSmall
+                            ?.copyWith(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 4),
+                    Text(s.description,
+                        style: TextStyle(color: scheme.onSurfaceVariant)),
+                    const SizedBox(height: 8),
+                    Text('from \$${s.price} · ${s.duration}',
+                        style: Theme.of(context).textTheme.labelMedium),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              Icon(
+                selected ? Icons.check_circle : Icons.radio_button_unchecked,
+                color: selected ? scheme.primary : scheme.outline,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _turnaroundCard(String value, String title, String subtitle) {
+    final scheme = Theme.of(context).colorScheme;
+    final selected = _turnaround == value;
+    return Expanded(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: () => setState(() => _turnaround = value),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            color: selected
+                ? scheme.primaryContainer.withValues(alpha: 0.5)
+                : null,
+            border: Border.all(
+              color: selected ? scheme.primary : scheme.outlineVariant,
+              width: selected ? 2 : 1,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title,
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleSmall
+                      ?.copyWith(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 4),
+              Text(subtitle, style: TextStyle(color: scheme.onSurfaceVariant)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final categories = ref.watch(categoriesProvider);
     final full = _images.length >= _maxImages;
+    final visible = _filter == 'All'
+        ? repairServices
+        : repairServices.where((s) => s.category == _filter).toList();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('New Repair Request')),
+      appBar: AppBar(title: const Text('Book a repair')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Form(
@@ -161,24 +280,33 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              categories.when(
-                loading: () => const LinearProgressIndicator(),
-                error: (e, _) => Text('Could not load categories: $e'),
-                data: (list) => DropdownButtonFormField<DeviceCategory>(
-                  initialValue: _category,
-                  decoration: const InputDecoration(
-                    labelText: 'Device type',
-                    prefixIcon: Icon(Icons.devices_outlined),
-                  ),
-                  items: list
-                      .map((c) =>
-                          DropdownMenuItem(value: c, child: Text(c.name)))
-                      .toList(),
-                  onChanged: (c) => setState(() => _category = c),
-                  validator: (v) => v == null ? 'Select a device type' : null,
-                ),
+              Text('Choose a service',
+                  style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: serviceCategories
+                    .map((c) => ChoiceChip(
+                          label: Text(c),
+                          selected: _filter == c,
+                          onSelected: (_) => setState(() {
+                            _filter = c;
+                            if (_service != null &&
+                                c != 'All' &&
+                                _service!.category != c) {
+                              _service = null;
+                            }
+                          }),
+                        ))
+                    .toList(),
               ),
               const SizedBox(height: 14),
+              ...visible.map(_serviceTile),
+              const SizedBox(height: 10),
+              Text('Your device',
+                  style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 10),
               TextFormField(
                 controller: _modelController,
                 decoration: const InputDecoration(
@@ -192,15 +320,12 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
               ),
               const SizedBox(height: 14),
               TextFormField(
-                controller: _problemController,
-                maxLines: 4,
+                controller: _notesController,
+                maxLines: 3,
                 decoration: const InputDecoration(
-                  labelText: 'Describe the problem',
+                  labelText: 'Extra details (optional)',
                   alignLabelWithHint: true,
                 ),
-                validator: (v) => (v == null || v.trim().length < 10)
-                    ? 'Please describe the problem (at least 10 characters)'
-                    : null,
               ),
               const SizedBox(height: 24),
               Text('Photos (${_images.length}/$_maxImages)',
@@ -298,7 +423,32 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
                 ],
               ),
               const SizedBox(height: 28),
+              Text('Turnaround',
+                  style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  _turnaroundCard('standard', 'Standard', 'Ready in 2 days'),
+                  const SizedBox(width: 12),
+                  _turnaroundCard('express', 'Express',
+                      'Ready tomorrow (+\$$expressSurcharge)'),
+                ],
+              ),
+              const SizedBox(height: 24),
+              if (_service != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Text(
+                    'Estimated from \$$_total',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
               FilledButton(
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size(0, 56),
+                  shape: const StadiumBorder(),
+                ),
                 onPressed: _isLoading ? null : _submit,
                 child: _isLoading
                     ? const SizedBox(
@@ -306,7 +456,14 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
                         width: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Submit request'),
+                    : const Text('Confirm booking'),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Nothing is charged now. You approve the final price after diagnosis.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant),
               ),
               if (_isLoading && _video != null)
                 const Padding(
@@ -314,6 +471,7 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
                   child: Text('Uploading, videos can take a minute...',
                       textAlign: TextAlign.center),
                 ),
+              const SizedBox(height: 20),
             ],
           ),
         ),

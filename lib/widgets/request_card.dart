@@ -22,6 +22,11 @@ class RequestCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final r = request;
+    final title = r.serviceName.isNotEmpty ? r.serviceName : r.deviceModel;
+    final sub = r.serviceName.isNotEmpty
+        ? '${r.deviceModel} · ${r.turnaround == 'express' ? 'Express' : 'Standard'}'
+        : r.problemDescription;
+
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -46,11 +51,10 @@ class RequestCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(r.deviceModel,
-                        style: Theme.of(context).textTheme.titleMedium),
+                    Text(title, style: Theme.of(context).textTheme.titleMedium),
                     const SizedBox(height: 2),
                     Text(
-                      r.problemDescription,
+                      sub,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(color: scheme.onSurfaceVariant),
@@ -68,6 +72,11 @@ class RequestCard extends StatelessWidget {
                         const SizedBox(width: 4),
                         Text(_date(r.createdAt),
                             style: Theme.of(context).textTheme.labelSmall),
+                        if (r.estimatedPrice > 0) ...[
+                          const SizedBox(width: 10),
+                          Text('from \$${r.estimatedPrice}',
+                              style: Theme.of(context).textTheme.labelSmall),
+                        ],
                         const Spacer(),
                         StatusChip(r.status),
                       ],
